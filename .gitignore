@@ -1,0 +1,9 @@
+new_env/
+*.pyd
+*.dll
+*.so
+*.log
+*.pyc
+__pycache__/
+*.ipynb_checkpoints/
+.DS_Store
