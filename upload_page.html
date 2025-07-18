@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Parkinson's Voice Analysis - Upload</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 40px; 
+            background: lightgreen;
+            font-size: 18px;
+        }
+        .big-alert { 
+            background: red; 
+            color: white; 
+            padding: 30px; 
+            font-size: 24px; 
+            text-align: center;
+            margin: 20px 0;
+        }
+        .upload-form {
+            background: white;
+            padding: 30px;
+            border: 3px solid black;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="big-alert">
+        🚨 PARKINSON'S VOICE ANALYSIS 🚨<br>
+        Upload Page Working!
+    </div>
+    
+    <h1>🎤 Voice Upload for Parkinson's Analysis</h1>
+    
+    <div class="upload-form">
+        <h2>Upload Your Voice Recording</h2>
+        <form action="http://localhost:5000/upload" method="post" enctype="multipart/form-data">
+            <p><strong>Select audio file:</strong></p>
+            <input type="file" name="file" accept=".wav,.mp3,.flac,.m4a" required style="font-size: 16px; padding: 10px;">
+            <br><br>
+            <button type="submit" style="font-size: 18px; padding: 15px 30px; background: blue; color: white; border: none;">
+                🔍 Analyze Voice
+            </button>
+        </form>
+        
+        <div style="margin-top: 20px; padding: 15px; background: lightyellow; border: 2px solid orange;">
+            <h3>📋 Guidelines:</h3>
+            <ul>
+                <li>✅ Upload simple voice recordings (saying "ahhhh" for 3+ seconds)</li>
+                <li>✅ Supported: WAV, MP3, FLAC, M4A files</li>
+                <li>❌ Music files will be automatically rejected</li>
+                <li>🎯 Best results: Clear voice without background noise</li>
+            </ul>
+        </div>
+    </div>
+    
+    <div style="background: lightblue; padding: 20px; margin: 20px 0; border: 2px solid blue;">
+        <h3>🔗 Direct Links:</h3>
+        <ul>
+            <li><a href="http://localhost:5000/" style="font-size: 18px;">🏠 Home Page</a></li>
+            <li><a href="http://localhost:5000/upload" style="font-size: 18px;">📤 Upload Page</a></li>
+        </ul>
+    </div>
+</body>
+</html>

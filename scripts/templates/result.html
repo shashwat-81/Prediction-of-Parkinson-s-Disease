@@ -136,6 +136,26 @@
             <div class="card mb-4">
                 <div class="card-body">
                     <h5 class="card-title">
+                        <i class="fas fa-waveform-lines text-info me-2"></i>
+                        Audio Analysis
+                    </h5>
+                    {% if result.audio_analysis %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Duration:</strong> {{ "%.1f"|format(result.audio_analysis.duration) }} seconds</p>
+                            <p><strong>Complexity Score:</strong> {{ "%.3f"|format(result.audio_analysis.complexity_score) }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Analysis:</strong> {{ result.audio_analysis.analysis_note }}</p>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">
                         <i class="fas fa-cogs me-2"></i>Individual Model Results
                     </h5>
                     <div class="row">
