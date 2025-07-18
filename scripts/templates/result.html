@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block title %}Analysis Results - Parkinson's Voice AI{% endblock %}
+
+{% block content %}
+<div class="py-5">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold">
+                    <i class="fas fa-chart-line me-3 text-primary"></i>
+                    Voice Analysis Results
+                </h2>
+                <p class="lead text-muted">Analysis for: <strong>{{ filename }}</strong></p>
+            </div>
+
+            <!-- Main Result Card -->
+            <div class="card result-container mb-4">
+                <div class="card-body p-5">
+                    {% if result.prediction_type == 'ensemble' %}
+                        <div class="text-center mb-4">
+                            <h3 class="mb-3">
+                                <i class="fas fa-users me-2"></i>Ensemble Prediction
+                            </h3>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="h4 mb-2">
+                                        {% if result.predicted_class == 'HC_AH' %}
+                                            <i class="fas fa-smile text-success me-2"></i>Healthy Control
+                                        {% else %}
+                                            <i class="fas fa-exclamation-triangle text-warning me-2"></i>Parkinson's Indication
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <span class="risk-badge badge text-white 
+                                        {% if 'Low' in result.risk_level %}risk-low
+                                        {% elif 'Moderate' in result.risk_level %}risk-moderate
+                                        {% else %}risk-high{% endif %}">
+                                        {{ result.risk_level }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Probability Bars -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h6>Healthy Probability</h6>
+                                <div class="progress mb-2">
+                                    <div class="progress-bar bg-success" style="width: {{ result.healthy_probability }}%"></div>
+                                </div>
+                                <span class="fw-bold text-success">{{ result.healthy_probability }}%</span>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Parkinson's Probability</h6>
+                                <div class="progress mb-2">
+                                    <div class="progress-bar bg-warning" style="width: {{ result.parkinson_probability }}%"></div>
+                                </div>
+                                <span class="fw-bold text-warning">{{ result.parkinson_probability }}%</span>
+                            </div>
+                        </div>
+
+                        <!-- Model Agreement and Uncertainty -->
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h6>Model Agreement</h6>
+                                <div class="progress mb-2">
+                                    <div class="progress-bar bg-info" style="width: {{ result.model_agreement }}%"></div>
+                                </div>
+                                <span class="fw-bold">{{ result.model_agreement }}%</span>
+                                <small class="text-muted d-block">How much the AI models agree</small>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Prediction Uncertainty</h6>
+                                <div class="progress mb-2">
+                                    <div class="progress-bar bg-secondary" style="width: {{ result.uncertainty }}%"></div>
+                                </div>
+                                <span class="fw-bold">{{ result.uncertainty }}%</span>
+                                <small class="text-muted d-block">Variability between models</small>
+                            </div>
+                        </div>
+
+                    {% else %}
+                        <!-- Single Model Result -->
+                        <div class="text-center mb-4">
+                            <h3 class="mb-3">
+                                <i class="fas fa-robot me-2"></i>AI Prediction
+                            </h3>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="h4 mb-2">
+                                        {% if result.predicted_class == 'HC_AH' %}
+                                            <i class="fas fa-smile text-success me-2"></i>Healthy Control
+                                        {% else %}
+                                            <i class="fas fa-exclamation-triangle text-warning me-2"></i>Parkinson's Indication
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <span class="risk-badge badge text-white 
+                                        {% if 'Low' in result.risk_level %}risk-low
+                                        {% elif 'Moderate' in result.risk_level %}risk-moderate
+                                        {% else %}risk-high{% endif %}">
+                                        {{ result.risk_level }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <h6>Confidence</h6>
+                                <div class="progress mb-2">
+                                    <div class="progress-bar bg-primary" style="width: {{ result.confidence }}%"></div>
+                                </div>
+                                <span class="fw-bold">{{ result.confidence }}%</span>
+                            </div>
+                            <div class="col-md-6">
+                                <h6>Model Used</h6>
+                                <p class="fw-bold">{{ result.model_used }}</p>
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Recommendation -->
+                    <div class="alert alert-primary">
+                        <h6><i class="fas fa-lightbulb me-2"></i>Recommendation</h6>
+                        <p class="mb-0">{{ result.recommendation }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Individual Model Results (for ensemble) -->
+            {% if result.prediction_type == 'ensemble' %}
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-cogs me-2"></i>Individual Model Results
+                    </h5>
+                    <div class="row">
+                        {% for model in result.individual_models %}
+                        <div class="col-md-6 mb-3">
+                            <div class="model-card">
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <h6 class="mb-1">{{ model.name }}</h6>
+                                        <small class="text-muted">
+                                            {% if model.prediction == 'HC_AH' %}Healthy{% else %}Parkinson's{% endif %}
+                                        </small>
+                                    </div>
+                                    <div class="text-end">
+                                        <div class="fw-bold">{{ model.parkinson_prob }}%</div>
+                                        <small class="text-muted">Confidence: {{ model.confidence }}%</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Actions -->
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <a href="{{ url_for('upload_file') }}" class="btn btn-primary w-100">
+                        <i class="fas fa-upload me-2"></i>Analyze Another File
+                    </a>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <button class="btn btn-outline-primary w-100" onclick="window.print()">
+                        <i class="fas fa-print me-2"></i>Print Results
+                    </button>
+                </div>
+            </div>
+
+            <!-- Important Notes -->
+            <div class="row mt-4">
+                <div class="col-12">
+                    <div class="alert alert-warning">
+                        <h6><i class="fas fa-exclamation-triangle me-2"></i>Important Notes</h6>
+                        <ul class="mb-0">
+                            <li><strong>Medical Disclaimer:</strong> This analysis is for research and screening purposes only</li>
+                            <li><strong>Not a Diagnosis:</strong> Results should not replace professional medical evaluation</li>
+                            <li><strong>Consult Professionals:</strong> Always discuss concerning results with healthcare providers</li>
+                            <li><strong>Multiple Tests:</strong> Consider taking multiple recordings for better accuracy</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Risk Level Explanation -->
+            <div class="row mt-3">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-body">
+                            <h6 class="card-title">Risk Level Explanation</h6>
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <span class="badge risk-low text-white">Low Risk</span>
+                                    <small class="d-block text-muted">< 30% probability</small>
+                                </div>
+                                <div class="col-md-3">
+                                    <span class="badge risk-moderate text-white">Moderate Risk</span>
+                                    <small class="d-block text-muted">30-60% probability</small>
+                                </div>
+                                <div class="col-md-3">
+                                    <span class="badge risk-high text-white">High Risk</span>
+                                    <small class="d-block text-muted">60-80% probability</small>
+                                </div>
+                                <div class="col-md-3">
+                                    <span class="badge risk-high text-white">Very High Risk</span>
+                                    <small class="d-block text-muted">> 80% probability</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Auto-focus on main result for accessibility
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelector('.result-container').scrollIntoView({ behavior: 'smooth' });
+});
+</script>
+{% endblock %}
