@@ -42,7 +42,9 @@ def initialize_predictor():
     global predictor
     try:
         if predictor is None:
-            predictor = ParkinsonsPredictor()
+            # Use absolute path to scripts directory for model files
+            scripts_dir = os.path.dirname(os.path.abspath(__file__))
+            predictor = ParkinsonsPredictor(models_dir=scripts_dir)
         return True
     except Exception as e:
         print(f"Error initializing predictor: {e}")
