@@ -7,3 +7,12 @@ new_env/
 __pycache__/
 *.ipynb_checkpoints/
 .DS_Store
+
+# Large model files
+*.pth
+*.pkl
+*.h5
+*.bin
+*.safetensors
+models/
+*.model
