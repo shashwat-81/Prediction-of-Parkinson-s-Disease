@@ -1,0 +1,273 @@
+{% extends "base.html" %}
+
+{% block title %}Voice Analysis Results - Parkinson's AI{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <div class="text-center mb-4">
+                <h1 class="fw-bold text-primary">
+                    <i class="fas fa-chart-bar me-3"></i>
+                    Voice Analysis Results
+                </h1>
+                <p class="lead text-muted">Analysis for: <strong>{{ filename }}</strong></p>
+            </div>
+
+            <!-- Audio Analysis Info -->
+            {% if result.audio_analysis %}
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="fas fa-waveform me-2"></i>
+                        Audio Quality Assessment
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p class="mb-1"><strong>Duration:</strong> {{ "%.1f"|format(result.audio_analysis.duration) }} seconds</p>
+                            <p class="mb-1"><strong>Complexity Score:</strong> {{ "%.2f"|format(result.audio_analysis.complexity_score) }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p class="text-muted small mb-0">{{ result.audio_analysis.analysis_note }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Main Prediction Result -->
+            <div class="card mb-4">
+                <div class="card-body text-center p-5">
+                    {% set risk_color = "danger" if result.predicted_class == "Parkinson's Disease" else "success" %}
+                    {% set risk_icon = "fas fa-exclamation-triangle" if result.predicted_class == "Parkinson's Disease" else "fas fa-check-circle" %}
+                    
+                    <div class="alert alert-{{ risk_color }} mb-4">
+                        <i class="{{ risk_icon }} fa-2x mb-3"></i>
+                        <h3 class="mb-2">{{ result.predicted_class }}</h3>
+                        {% if result.prediction_type == "ensemble" %}
+                        <p class="mb-0">Model Agreement: {{ result.model_agreement }}%</p>
+                        {% else %}
+                        <p class="mb-0">Confidence: {{ result.confidence }}%</p>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Parkinson's Probability</h6>
+                            <div class="progress mb-3" style="height: 25px;">
+                                <div class="progress-bar bg-danger" 
+                                     style="width: {{ result.parkinson_probability }}%">
+                                    {{ result.parkinson_probability }}%
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Healthy Probability</h6>
+                            <div class="progress mb-3" style="height: 25px;">
+                                <div class="progress-bar bg-success" 
+                                     style="width: {{ result.healthy_probability }}%">
+                                    {{ result.healthy_probability }}%
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <h6>Risk Level</h6>
+                        <span class="badge bg-{{ risk_color }} fs-6 px-3 py-2">{{ result.risk_level }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ensemble Results (if available) -->
+            {% if result.prediction_type == "ensemble" and result.individual_models %}
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-layer-group me-2"></i>
+                        Individual Model Results
+                    </h5>
+                    <div class="row">
+                        {% for model in result.individual_models %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body p-3">
+                                    <h6 class="card-title">{{ model.name }}</h6>
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <span class="badge bg-{{ 'danger' if model.prediction == 'Parkinson\'s Disease' else 'success' }}">
+                                            {{ model.prediction }}
+                                        </span>
+                                        <small class="text-muted">{{ model.confidence }}% confidence</small>
+                                    </div>
+                                    <div class="progress mt-2" style="height: 8px;">
+                                        <div class="progress-bar bg-danger" 
+                                             style="width: {{ model.parkinson_prob }}%"></div>
+                                    </div>
+                                    <small class="text-muted">Parkinson's: {{ model.parkinson_prob }}%</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    
+                    {% if result.uncertainty %}
+                    <div class="mt-3">
+                        <h6>Prediction Uncertainty</h6>
+                        <div class="progress" style="height: 15px;">
+                            <div class="progress-bar bg-warning" style="width: {{ result.uncertainty }}%">
+                                {{ result.uncertainty }}%
+                            </div>
+                        </div>
+                        <small class="text-muted">Lower uncertainty indicates more reliable prediction</small>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Single Model Result (if not ensemble) -->
+            {% if result.prediction_type == "single" and result.model_used %}
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="fas fa-cog me-2"></i>
+                        Model Information
+                    </h6>
+                    <p class="mb-0">Analysis performed using: <strong>{{ result.model_used }}</strong></p>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Recommendation -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-stethoscope me-2"></i>
+                        Clinical Recommendation
+                    </h5>
+                    <div class="alert alert-{{ 'warning' if risk_color == 'danger' else 'info' }}">
+                        {{ result.recommendation }}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Technical Details (collapsible) -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="fas fa-info-circle me-2"></i>
+                        <a class="text-decoration-none" data-bs-toggle="collapse" href="#technicalDetails" role="button">
+                            Technical Details
+                            <i class="fas fa-chevron-down ms-2"></i>
+                        </a>
+                    </h6>
+                    <div class="collapse" id="technicalDetails">
+                        <div class="mt-3">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Analysis Type</h6>
+                                    <p class="text-muted">{{ result.prediction_type|capitalize }} Prediction</p>
+                                    
+                                    {% if result.audio_analysis %}
+                                    <h6>Audio Characteristics</h6>
+                                    <ul class="list-unstyled text-muted small">
+                                        <li>Duration: {{ "%.1f"|format(result.audio_analysis.duration) }}s</li>
+                                        <li>Complexity: {{ "%.2f"|format(result.audio_analysis.complexity_score) }}</li>
+                                    </ul>
+                                    {% endif %}
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Prediction Confidence</h6>
+                                    {% if result.prediction_type == "ensemble" %}
+                                    <p class="text-muted">Model Agreement: {{ result.model_agreement }}%</p>
+                                    {% else %}
+                                    <p class="text-muted">Single Model: {{ result.confidence }}%</p>
+                                    {% endif %}
+                                    
+                                    <h6>Risk Assessment</h6>
+                                    <p class="text-muted">{{ result.risk_level }}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Disclaimer -->
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Medical Disclaimer:</strong> This AI analysis is for informational purposes only and should not replace professional medical diagnosis. Please consult with a healthcare provider for proper medical evaluation.
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="text-center">
+                <a href="{{ url_for('upload_voice') }}" class="btn btn-primary btn-lg me-3">
+                    <i class="fas fa-upload me-2"></i>
+                    Analyze Another Recording
+                </a>
+                <a href="{{ url_for('upload_drawing') }}" class="btn btn-success btn-lg me-3">
+                    <i class="fas fa-draw-polygon me-2"></i>
+                    Try Drawing Analysis
+                </a>
+                <a href="{{ url_for('index') }}" class="btn btn-outline-primary btn-lg">
+                    <i class="fas fa-home me-2"></i>
+                    Home
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.progress {
+    border-radius: 10px;
+    overflow: hidden;
+}
+.progress-bar {
+    border-radius: 10px;
+    transition: width 0.8s ease;
+}
+.badge {
+    font-size: 0.9em;
+}
+.card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+</style>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Animate progress bars
+    const progressBars = document.querySelectorAll('.progress-bar');
+    progressBars.forEach(bar => {
+        const width = bar.style.width;
+        bar.style.width = '0%';
+        setTimeout(() => {
+            bar.style.width = width;
+        }, 500);
+    });
+    
+    // Add smooth collapse animation
+    const collapseElement = document.getElementById('technicalDetails');
+    if (collapseElement) {
+        collapseElement.addEventListener('show.bs.collapse', function() {
+            const chevron = document.querySelector('[data-bs-toggle="collapse"] i.fa-chevron-down');
+            if (chevron) {
+                chevron.style.transform = 'rotate(180deg)';
+            }
+        });
+        
+        collapseElement.addEventListener('hide.bs.collapse', function() {
+            const chevron = document.querySelector('[data-bs-toggle="collapse"] i.fa-chevron-down');
+            if (chevron) {
+                chevron.style.transform = 'rotate(0deg)';
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

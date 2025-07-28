@@ -1,129 +1,119 @@
 {% extends "base.html" %}
 
-{% block title %}Parkinson's Voice AI - Home{% endblock %}
+{% block title %}Parkinson's Disease AI Analysis{% endblock %}
 
 {% block content %}
 <div class="py-5">
     <div class="text-center mb-5">
         <h1 class="display-4 fw-bold text-primary">
-            <i class="fas fa-microphone me-3"></i>
-            Parkinson's Voice AI
+            <i class="fas fa-brain me-3"></i>
+            Parkinson's Disease AI Analysis
         </h1>
-        <p class="lead text-muted">Advanced voice analysis for Parkinson's disease screening using AI</p>
+        <p class="lead text-muted">Advanced AI-powered analysis using voice recordings and drawing patterns</p>
     </div>
 
-    <div class="row mb-5">
-        <div class="col-lg-8 mx-auto">
-            <div class="card text-center">
-                <div class="card-body p-5">
-                    <h3 class="card-title mb-4">How It Works</h3>
-                    <div class="row">
-                        <div class="col-md-4 mb-4">
-                            <div class="h2 text-primary mb-3">
-                                <i class="fas fa-record-vinyl"></i>
-                            </div>
-                            <h5>1. Record</h5>
-                            <p class="text-muted">Say "Ahhhh" for 3-5 seconds using any microphone</p>
-                        </div>
-                        <div class="col-md-4 mb-4">
-                            <div class="h2 text-primary mb-3">
-                                <i class="fas fa-cloud-upload-alt"></i>
-                            </div>
-                            <h5>2. Upload</h5>
-                            <p class="text-muted">Upload your audio file through our secure interface</p>
-                        </div>
-                        <div class="col-md-4 mb-4">
-                            <div class="h2 text-primary mb-3">
-                                <i class="fas fa-brain"></i>
-                            </div>
-                            <h5>3. Analyze</h5>
-                            <p class="text-muted">AI analyzes your voice using advanced Wav2Vec2 technology</p>
-                        </div>
+    <div class="row g-4 justify-content-center">
+        <!-- Voice Analysis Card -->
+        <div class="col-md-6">
+            <div class="card prediction-card h-100">
+                <div class="card-body text-center p-5">
+                    <div class="mb-4">
+                        <i class="fas fa-microphone fa-4x text-primary"></i>
                     </div>
-                    <a href="{{ url_for('upload_file') }}" class="btn btn-primary btn-lg mt-3">
-                        <i class="fas fa-upload me-2"></i>Start Analysis
+                    <h3 class="card-title text-primary mb-3">Voice Analysis</h3>
+                    <p class="card-text text-muted mb-4">
+                        Upload a voice recording for AI analysis of vocal patterns, 
+                        speech characteristics, and voice tremor detection.
+                    </p>
+                    <div class="mb-4">
+                        <small class="text-muted">
+                            <i class="fas fa-check-circle text-success me-1"></i>
+                            Accepts: WAV, MP3, FLAC, M4A
+                        </small>
+                    </div>
+                    <a href="{{ url_for('upload_voice') }}" class="btn btn-primary btn-analysis w-100">
+                        <i class="fas fa-upload me-2"></i>
+                        Analyze Voice Recording
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Drawing Analysis Card -->
+        <div class="col-md-6">
+            <div class="card prediction-card h-100">
+                <div class="card-body text-center p-5">
+                    <div class="mb-4">
+                        <i class="fas fa-draw-polygon fa-4x text-success"></i>
+                    </div>
+                    <h3 class="card-title text-success mb-3">Drawing Analysis</h3>
+                    <p class="card-text text-muted mb-4">
+                        Upload spiral or wave drawings for analysis of motor symptoms, 
+                        tremor patterns, and handwriting characteristics.
+                    </p>
+                    <div class="mb-4">
+                        <small class="text-muted">
+                            <i class="fas fa-check-circle text-success me-1"></i>
+                            Accepts: PNG, JPG, JPEG
+                        </small>
+                    </div>
+                    <a href="{{ url_for('upload_drawing') }}" class="btn btn-success btn-analysis w-100">
+                        <i class="fas fa-upload me-2"></i>
+                        Analyze Drawing
                     </a>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-md-6 mb-4">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h5 class="card-title">
-                        <i class="fas fa-shield-alt text-success me-2"></i>
-                        Advanced AI Technology
-                    </h5>
-                    <ul class="list-unstyled">
-                        <li><i class="fas fa-check text-success me-2"></i>80% accuracy with ensemble models</li>
-                        <li><i class="fas fa-check text-success me-2"></i>Wav2Vec2 deep learning features</li>
-                        <li><i class="fas fa-check text-success me-2"></i>Multiple AI models for reliability</li>
-                        <li><i class="fas fa-check text-success me-2"></i>Cross-validated performance</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-        
-        <div class="col-md-6 mb-4">
-            <div class="card h-100">
-                <div class="card-body">
-                    <h5 class="card-title">
-                        <i class="fas fa-user-md text-info me-2"></i>
-                        Clinical Features
-                    </h5>
-                    <ul class="list-unstyled">
-                        <li><i class="fas fa-check text-success me-2"></i>Risk level assessment</li>
-                        <li><i class="fas fa-check text-success me-2"></i>Confidence scoring</li>
-                        <li><i class="fas fa-check text-success me-2"></i>Model agreement metrics</li>
-                        <li><i class="fas fa-check text-success me-2"></i>Clinical recommendations</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-
+    <!-- Features Section -->
     <div class="row mt-5">
-        <div class="col-lg-10 mx-auto">
-            <div class="alert alert-warning">
-                <h6><i class="fas fa-exclamation-triangle me-2"></i>Important Medical Disclaimer</h6>
-                <p class="mb-0">
-                    This AI system is designed for research and screening purposes only. It is <strong>not a medical diagnostic tool</strong> 
-                    and should not replace professional medical evaluation. Always consult with qualified healthcare professionals 
-                    for medical advice, diagnosis, or treatment decisions.
-                </p>
+        <div class="col-md-4">
+            <div class="text-center">
+                <i class="fas fa-shield-alt fa-2x text-primary mb-3"></i>
+                <h5>Secure & Private</h5>
+                <p class="text-muted">Your data is processed securely and not stored permanently</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="text-center">
+                <i class="fas fa-brain fa-2x text-success mb-3"></i>
+                <h5>AI-Powered</h5>
+                <p class="text-muted">Advanced machine learning models trained on medical data</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="text-center">
+                <i class="fas fa-clock fa-2x text-info mb-3"></i>
+                <h5>Fast Results</h5>
+                <p class="text-muted">Get analysis results in seconds, not hours</p>
             </div>
         </div>
     </div>
 
-    <div class="row mt-4">
-        <div class="col-lg-8 mx-auto">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">
-                        <i class="fas fa-microphone-alt me-2"></i>
-                        Recording Tips for Best Results
-                    </h5>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <ul class="list-unstyled">
-                                <li><i class="fas fa-check-circle text-success me-2"></i>Record in a quiet room</li>
-                                <li><i class="fas fa-check-circle text-success me-2"></i>Use consistent setup</li>
-                                <li><i class="fas fa-check-circle text-success me-2"></i>Say "Ah" clearly for 3-5 seconds</li>
-                            </ul>
-                        </div>
-                        <div class="col-md-6">
-                            <ul class="list-unstyled">
-                                <li><i class="fas fa-check-circle text-success me-2"></i>Avoid background noise</li>
-                                <li><i class="fas fa-check-circle text-success me-2"></i>Use WAV format when possible</li>
-                                <li><i class="fas fa-check-circle text-success me-2"></i>Take multiple recordings</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <!-- Disclaimer -->
+    <div class="alert alert-warning mt-4">
+        <i class="fas fa-exclamation-triangle me-2"></i>
+        <strong>Medical Disclaimer:</strong> This AI analysis is for informational purposes only and should not replace professional medical diagnosis. Please consult with a healthcare provider for proper medical evaluation.
     </div>
 </div>
+
+<style>
+.prediction-card {
+    border: none;
+    border-radius: 15px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.prediction-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+}
+.btn-analysis {
+    padding: 12px 30px;
+    font-size: 16px;
+    border-radius: 8px;
+    font-weight: 600;
+}
+</style>
 {% endblock %}
