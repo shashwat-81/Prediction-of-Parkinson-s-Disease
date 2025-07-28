@@ -1,205 +1,93 @@
 {% extends "base.html" %}
 
-{% block title %}About - Parkinson's Voice AI{% endblock %}
+{% block title %}About - Parkinson's AI{% endblock %}
 
 {% block content %}
-<div class="py-5">
+<div class="container py-5">
     <div class="row">
-        <div class="col-lg-10 mx-auto">
+        <div class="col-lg-8 mx-auto">
             <div class="text-center mb-5">
-                <h2 class="fw-bold">
-                    <i class="fas fa-info-circle me-3 text-primary"></i>
-                    About Parkinson's Voice AI
-                </h2>
-                <p class="lead text-muted">Advanced voice analysis for Parkinson's disease screening</p>
+                <h1 class="fw-bold text-primary">
+                    <i class="fas fa-info-circle me-3"></i>
+                    About Parkinson's AI Analysis
+                </h1>
+                <p class="lead text-muted">Advanced AI-powered system for Parkinson's disease screening</p>
             </div>
 
-            <div class="row mb-5">
-                <div class="col-md-6">
-                    <div class="card h-100">
-                        <div class="card-body">
-                            <h5 class="card-title">
-                                <i class="fas fa-brain text-primary me-2"></i>
-                                AI Technology
-                            </h5>
-                            <p>Our system uses state-of-the-art Wav2Vec2 neural networks combined with ensemble machine learning to analyze voice patterns associated with Parkinson's disease.</p>
-                            <ul>
-                                <li><strong>Wav2Vec2:</strong> Pre-trained deep learning model for audio</li>
-                                <li><strong>Ensemble Methods:</strong> Multiple AI models for reliability</li>
-                                <li><strong>Feature Extraction:</strong> 5,376 deep audio features</li>
-                                <li><strong>Cross-Validation:</strong> Rigorous performance testing</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="col-md-6">
-                    <div class="card h-100">
-                        <div class="card-body">
-                            <h5 class="card-title">
-                                <i class="fas fa-chart-bar text-success me-2"></i>
-                                Performance Metrics
-                            </h5>
-                            <p>Our system has been thoroughly tested and validated with the following performance characteristics:</p>
-                            <ul>
-                                <li><strong>Accuracy:</strong> ~80% with ensemble approach</li>
-                                <li><strong>ROC AUC:</strong> 87-89% (excellent discrimination)</li>
-                                <li><strong>Cross-Validation:</strong> 74.07% ± 5.14% mean accuracy</li>
-                                <li><strong>Model Agreement:</strong> Consensus scoring for reliability</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="card mb-5">
+            <div class="card mb-4">
                 <div class="card-body">
                     <h5 class="card-title">
-                        <i class="fas fa-cogs text-info me-2"></i>
-                        How It Works
+                        <i class="fas fa-brain me-2"></i>
+                        What is this system?
                     </h5>
-                    <div class="row">
-                        <div class="col-md-4 text-center mb-4">
-                            <div class="h2 text-primary mb-3">
-                                <i class="fas fa-waveform-lines"></i>
-                            </div>
-                            <h6>Audio Processing</h6>
-                            <p class="text-muted">Your voice is processed using advanced signal processing techniques to extract meaningful features.</p>
-                        </div>
-                        <div class="col-md-4 text-center mb-4">
-                            <div class="h2 text-primary mb-3">
-                                <i class="fas fa-neural-network"></i>
-                            </div>
-                            <h6>Feature Extraction</h6>
-                            <p class="text-muted">Wav2Vec2 neural network extracts 5,376 deep contextual features from your voice sample.</p>
-                        </div>
-                        <div class="col-md-4 text-center mb-4">
-                            <div class="h2 text-primary mb-3">
-                                <i class="fas fa-balance-scale"></i>
-                            </div>
-                            <h6>Ensemble Analysis</h6>
-                            <p class="text-muted">Multiple AI models analyze the features and provide consensus predictions with confidence scores.</p>
-                        </div>
-                    </div>
+                    <p class="card-text">
+                        Our AI-powered system uses advanced machine learning models to analyze voice recordings 
+                        and drawing patterns for potential signs of Parkinson's disease. The system employs 
+                        multiple modalities to provide comprehensive screening capabilities.
+                    </p>
                 </div>
             </div>
 
-            <div class="row mb-5">
+            <div class="row">
                 <div class="col-md-6">
-                    <div class="card">
+                    <div class="card mb-4">
                         <div class="card-body">
-                            <h5 class="card-title">
-                                <i class="fas fa-database text-warning me-2"></i>
-                                Training Data
-                            </h5>
-                            <p>The AI models were trained on a carefully curated dataset:</p>
-                            <ul>
-                                <li><strong>Healthy Controls:</strong> 41 voice samples</li>
-                                <li><strong>Parkinson's Patients:</strong> 40 voice samples</li>
-                                <li><strong>Data Augmentation:</strong> 3x expansion with audio modifications</li>
-                                <li><strong>Validation:</strong> Cross-validated performance testing</li>
-                            </ul>
+                            <h6 class="card-title text-primary">
+                                <i class="fas fa-microphone me-2"></i>
+                                Voice Analysis
+                            </h6>
+                            <p class="card-text small">
+                                Analyzes vocal patterns, speech characteristics, and voice tremor 
+                                using advanced audio processing and machine learning techniques.
+                            </p>
                         </div>
                     </div>
                 </div>
-                
                 <div class="col-md-6">
-                    <div class="card">
+                    <div class="card mb-4">
                         <div class="card-body">
-                            <h5 class="card-title">
-                                <i class="fas fa-robot text-primary me-2"></i>
-                                AI Models Used
-                            </h5>
-                            <p>Our ensemble includes multiple specialized algorithms:</p>
-                            <ul>
-                                <li><strong>Neural Network:</strong> 79.6% accuracy (best)</li>
-                                <li><strong>Random Forest:</strong> 77.6% accuracy</li>
-                                <li><strong>SVM:</strong> 75.5% accuracy</li>
-                                <li><strong>Logistic Regression:</strong> 77.6% accuracy</li>
-                                <li><strong>Gradient Boosting:</strong> 69.4% accuracy</li>
-                            </ul>
+                            <h6 class="card-title text-success">
+                                <i class="fas fa-draw-polygon me-2"></i>
+                                Drawing Analysis
+                            </h6>
+                            <p class="card-text small">
+                                Examines spiral and wave drawings for motor symptoms, tremor patterns, 
+                                and handwriting characteristics using computer vision.
+                            </p>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="alert alert-danger mb-5">
-                <h5><i class="fas fa-exclamation-triangle me-2"></i>Important Medical Disclaimer</h5>
-                <p>This AI system is designed for <strong>research and screening purposes only</strong>. It is not a medical diagnostic tool and should not replace professional medical evaluation.</p>
-                <ul class="mb-0">
-                    <li>Results should be considered as supplementary information only</li>
-                    <li>Always consult qualified healthcare professionals for medical advice</li>
-                    <li>Do not make medical decisions based solely on AI predictions</li>
-                    <li>This tool cannot replace clinical examination and professional diagnosis</li>
-                </ul>
-            </div>
-
-            <div class="card mb-5">
-                <div class="card-body">
-                    <h5 class="card-title">
-                        <i class="fas fa-chart-line text-success me-2"></i>
-                        Interpreting Results
-                    </h5>
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h6>Risk Levels:</h6>
-                            <ul>
-                                <li><strong>Low Risk (&lt;30%):</strong> Continue regular monitoring</li>
-                                <li><strong>Moderate Risk (30-60%):</strong> Consider medical consultation</li>
-                                <li><strong>High Risk (60-80%):</strong> Recommend neurological evaluation</li>
-                                <li><strong>Very High Risk (&gt;80%):</strong> Urgent medical consultation</li>
-                            </ul>
-                        </div>
-                        <div class="col-md-6">
-                            <h6>Key Metrics:</h6>
-                            <ul>
-                                <li><strong>Model Agreement:</strong> Consensus between AI models</li>
-                                <li><strong>Confidence:</strong> How certain the prediction is</li>
-                                <li><strong>Uncertainty:</strong> Variability between models</li>
-                                <li><strong>Ensemble:</strong> Combined prediction from all models</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
+            <div class="alert alert-warning">
+                <h6><i class="fas fa-exclamation-triangle me-2"></i>Important Disclaimer</h6>
+                <p class="mb-0">
+                    This system is designed for screening purposes only and should not replace 
+                    professional medical diagnosis. Always consult with healthcare providers 
+                    for proper medical evaluation and diagnosis.
+                </p>
             </div>
 
             <div class="card">
                 <div class="card-body">
-                    <h5 class="card-title">
-                        <i class="fas fa-users text-primary me-2"></i>
-                        Research and Development
-                    </h5>
-                    <p>This system represents cutting-edge research in AI-based medical screening:</p>
-                    <div class="row">
-                        <div class="col-md-4">
-                            <h6>Technologies Used:</h6>
-                            <ul>
-                                <li>PyTorch & Transformers</li>
-                                <li>Scikit-learn</li>
-                                <li>Librosa audio processing</li>
-                                <li>Flask web framework</li>
-                            </ul>
-                        </div>
-                        <div class="col-md-4">
-                            <h6>Validation Methods:</h6>
-                            <ul>
-                                <li>5-fold cross-validation</li>
-                                <li>ROC curve analysis</li>
-                                <li>Confusion matrix evaluation</li>
-                                <li>Ensemble method comparison</li>
-                            </ul>
-                        </div>
-                        <div class="col-md-4">
-                            <h6>Future Improvements:</h6>
-                            <ul>
-                                <li>Larger training datasets</li>
-                                <li>Multi-language support</li>
-                                <li>Real-time processing</li>
-                                <li>Clinical validation studies</li>
-                            </ul>
-                        </div>
-                    </div>
+                    <h6 class="card-title">
+                        <i class="fas fa-shield-alt me-2"></i>
+                        Privacy & Security
+                    </h6>
+                    <ul class="mb-0">
+                        <li>Your data is processed securely and not stored permanently</li>
+                        <li>All uploads are automatically deleted after analysis</li>
+                        <li>No personal information is collected or stored</li>
+                        <li>Analysis is performed locally on our secure servers</li>
+                    </ul>
                 </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <a href="{{ url_for('index') }}" class="btn btn-primary">
+                    <i class="fas fa-arrow-left me-2"></i>
+                    Back to Analysis
+                </a>
             </div>
         </div>
     </div>

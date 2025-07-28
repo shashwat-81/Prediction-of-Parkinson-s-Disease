@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}Drawing Analysis Results - Parkinson's AI{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            <div class="text-center mb-4">
+                <h1 class="fw-bold text-success">
+                    <i class="fas fa-chart-bar me-3"></i>
+                    Drawing Analysis Results
+                </h1>
+                <p class="lead text-muted">Analysis for: <strong>{{ filename }}</strong></p>
+            </div>
+
+            <!-- Main Result -->
+            <div class="card mb-4">
+                <div class="card-body text-center p-5">
+                    {% set risk_color = "danger" if result.prediction == "Parkinson's Disease" else "success" %}
+                    {% set risk_icon = "fas fa-exclamation-triangle" if result.prediction == "Parkinson's Disease" else "fas fa-check-circle" %}
+                    
+                    <div class="alert alert-{{ risk_color }} mb-4">
+                        <i class="{{ risk_icon }} fa-2x mb-3"></i>
+                        <h3 class="mb-2">{{ result.prediction }}</h3>
+                        <p class="mb-0">Confidence: {{ "%.1f"|format(result.confidence * 100) }}%</p>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Parkinson's Probability</h6>
+                            <div class="progress mb-3" style="height: 25px;">
+                                <div class="progress-bar bg-danger" 
+                                     style="width: {{ "%.1f"|format(result.parkinson_probability * 100) }}%">
+                                    {{ "%.1f"|format(result.parkinson_probability * 100) }}%
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Healthy Probability</h6>
+                            <div class="progress mb-3" style="height: 25px;">
+                                <div class="progress-bar bg-success" 
+                                     style="width: {{ "%.1f"|format(result.healthy_probability * 100) }}%">
+                                    {{ "%.1f"|format(result.healthy_probability * 100) }}%
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Medical Features Analysis -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-microscope me-2"></i>
+                        Medical Features Analysis
+                    </h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <h6>Line Smoothness (Tremor Detection)</h6>
+                            <div class="feature-bar">
+                                <div class="feature-value bg-primary" 
+                                     style="width: {{ "%.1f"|format(result.medical_features.line_smoothness * 100) }}%"></div>
+                            </div>
+                            <small class="text-muted">Score: {{ "%.3f"|format(result.medical_features.line_smoothness) }}</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <h6>Size Consistency (Micrographia)</h6>
+                            <div class="feature-bar">
+                                <div class="feature-value bg-info" 
+                                     style="width: {{ "%.1f"|format(result.medical_features.size_consistency * 100) }}%"></div>
+                            </div>
+                            <small class="text-muted">Score: {{ "%.3f"|format(result.medical_features.size_consistency) }}</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <h6>Thickness Variation (Bradykinesia)</h6>
+                            <div class="feature-bar">
+                                <div class="feature-value bg-warning" 
+                                     style="width: {{ "%.1f"|format(result.medical_features.thickness_variation * 100) }}%"></div>
+                            </div>
+                            <small class="text-muted">Score: {{ "%.3f"|format(result.medical_features.thickness_variation) }}</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <h6>Angular Consistency (Rigidity)</h6>
+                            <div class="feature-bar">
+                                <div class="feature-value bg-success" 
+                                     style="width: {{ "%.1f"|format(result.medical_features.angular_consistency * 100) }}%"></div>
+                            </div>
+                            <small class="text-muted">Score: {{ "%.3f"|format(result.medical_features.angular_consistency) }}</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Clinical Interpretation -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">
+                        <i class="fas fa-stethoscope me-2"></i>
+                        Clinical Interpretation
+                    </h5>
+                    <div class="alert alert-{{ 'warning' if risk_color == 'danger' else 'info' }}">
+                        <h6>Risk Level: {{ result.clinical_interpretation.risk_level }}</h6>
+                        <ul class="mb-0">
+                            {% for note in result.clinical_interpretation.clinical_notes %}
+                            <li>{{ note }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    <h6>Recommendations:</h6>
+                    <ul>
+                        {% for rec in result.clinical_interpretation.recommendations %}
+                        <li>{{ rec }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Disclaimer -->
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Medical Disclaimer:</strong> This AI analysis is for informational purposes only and should not replace professional medical diagnosis. Please consult with a healthcare provider for proper medical evaluation.
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="text-center">
+                <a href="{{ url_for('upload_drawing') }}" class="btn btn-success btn-lg me-3">
+                    <i class="fas fa-upload me-2"></i>
+                    Analyze Another Drawing
+                </a>
+                <a href="{{ url_for('index') }}" class="btn btn-outline-success btn-lg">
+                    <i class="fas fa-home me-2"></i>
+                    Home
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.feature-bar {
+    height: 20px;
+    border-radius: 10px;
+    background: #e9ecef;
+    overflow: hidden;
+}
+.feature-value {
+    height: 100%;
+    border-radius: 10px;
+    transition: width 0.8s ease;
+}
+</style>
+{% endblock %}

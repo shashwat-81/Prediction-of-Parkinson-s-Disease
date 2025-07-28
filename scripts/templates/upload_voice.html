@@ -1,23 +1,29 @@
 {% extends "base.html" %}
 
-{% block title %}Upload Audio - Parkinson's Voice AI{% endblock %}
+{% block title %}Voice Analysis - Parkinson's AI{% endblock %}
 
 {% block content %}
-<!-- DEBUG: Upload page loading check -->
-<div style="background: red; color: white; padding: 10px; margin: 10px;">
-    DEBUG: If you can see this red box, the upload template is loading correctly!
-</div>
-
 <div class="container py-5">
     <div class="row">
         <div class="col-lg-8 mx-auto">
             <div class="text-center mb-5">
                 <h2 class="fw-bold">
-                    <i class="fas fa-cloud-upload-alt me-3 text-primary"></i>
+                    <i class="fas fa-microphone me-3 text-primary"></i>
                     Upload Your Voice Recording
                 </h2>
                 <p class="lead text-muted">Upload an audio file for Parkinson's disease voice analysis</p>
             </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
 
             <div class="alert alert-info mb-4">
                 <h6><i class="fas fa-info-circle me-2"></i>Voice Recording Guidelines</h6>
@@ -66,7 +72,6 @@
                             </button>
                         </div>
 
-                        <!-- Upload Progress -->
                         <div class="mt-4" id="uploadProgress" style="display: none;">
                             <div class="d-flex align-items-center mb-2">
                                 <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
@@ -82,71 +87,11 @@
                 </div>
             </div>
 
-            <!-- File Requirements -->
-            <div class="alert alert-info mt-4">
-                <h6><i class="fas fa-file-audio me-2"></i>File Requirements & Guidelines</h6>
-                <div class="row">
-                    <div class="col-md-6">
-                        <h6 class="text-success">✅ Accepted Audio:</h6>
-                        <ul>
-                            <li><strong>Voice recordings:</strong> "Ah" sound vocalization</li>
-                            <li><strong>Speech:</strong> Simple speaking, reading</li>
-                            <li><strong>Duration:</strong> 1+ seconds (3-10s recommended)</li>
-                            <li><strong>Formats:</strong> WAV, MP3, FLAC, M4A</li>
-                            <li><strong>Size:</strong> Maximum 16MB</li>
-                        </ul>
-                    </div>
-                    <div class="col-md-6">
-                        <h6 class="text-danger">❌ Automatically Rejected:</h6>
-                        <ul>
-                            <li><strong>Music:</strong> Songs with instruments</li>
-                            <li><strong>Complex audio:</strong> Multiple instruments/sounds</li>
-                            <li><strong>Short clips:</strong> Less than 1 second</li>
-                            <li><strong>Background music:</strong> Voice with music</li>
-                            <li><strong>Noisy audio:</strong> Poor quality recordings</li>
-                        </ul>
-                    </div>
-                </div>
-                <div class="alert alert-warning mt-3 mb-0">
-                    <small><i class="fas fa-robot me-1"></i><strong>AI Detection:</strong> Our system automatically analyzes audio complexity to ensure only voice recordings are processed for accurate medical screening.</small>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Example Audio Card -->
-    <div class="row mt-5">
-        <div class="col-lg-8 mx-auto">
-            <div class="card">
-                <div class="card-body">
-                    <h5 class="card-title">
-                        <i class="fas fa-microphone-alt text-primary me-2"></i>
-                        How to Record
-                    </h5>
-                    <div class="row">
-                        <div class="col-md-4 text-center mb-3">
-                            <div class="h3 text-primary mb-2">
-                                <i class="fas fa-circle-1"></i>
-                            </div>
-                            <h6>Position</h6>
-                            <p class="text-muted small">Hold microphone 6-8 inches from mouth</p>
-                        </div>
-                        <div class="col-md-4 text-center mb-3">
-                            <div class="h3 text-primary mb-2">
-                                <i class="fas fa-circle-2"></i>
-                            </div>
-                            <h6>Sound</h6>
-                            <p class="text-muted small">Say "Ahhhh" clearly for 3-5 seconds</p>
-                        </div>
-                        <div class="col-md-4 text-center mb-3">
-                            <div class="h3 text-primary mb-2">
-                                <i class="fas fa-circle-3"></i>
-                            </div>
-                            <h6>Environment</h6>
-                            <p class="text-muted small">Quiet room, no background noise</p>
-                        </div>
-                    </div>
-                </div>
+            <div class="text-center mt-4">
+                <a href="{{ url_for('index') }}" class="btn btn-outline-primary me-3">
+                    <i class="fas fa-home me-2"></i>
+                    Back to Home
+                </a>
             </div>
         </div>
     </div>
@@ -156,7 +101,6 @@
 {% block scripts %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    // File upload handling
     const fileUploadArea = document.getElementById('fileUploadArea');
     const fileInput = document.getElementById('fileInput');
     const selectedFile = document.getElementById('selectedFile');
@@ -165,10 +109,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const uploadForm = document.getElementById('uploadForm');
     const uploadProgress = document.getElementById('uploadProgress');
 
-    // Only add event listeners if elements exist
     if (fileUploadArea && fileInput && selectedFile && uploadContent && submitBtn && uploadForm) {
         
-        // Drag and drop functionality
         fileUploadArea.addEventListener('dragover', function(e) {
             e.preventDefault();
             fileUploadArea.style.backgroundColor = '#e9ecef';
@@ -188,23 +130,19 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
 
-        // Click to upload
         fileUploadArea.addEventListener('click', function() {
             if (!fileInput.files.length) {
                 fileInput.click();
             }
         });
 
-        // File input change
         fileInput.addEventListener('change', function(e) {
             if (e.target.files.length > 0) {
                 handleFileSelect(e.target.files[0]);
             }
         });
 
-        // Handle file selection
         function handleFileSelect(file) {
-            // Check file type
             const fileExtension = file.name.toLowerCase().split('.').pop();
             const allowedExtensions = ['wav', 'mp3', 'flac', 'm4a'];
             
@@ -213,13 +151,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
 
-            // Check file size (16MB limit)
             if (file.size > 16 * 1024 * 1024) {
                 alert('File size too large. Please select a file smaller than 16MB.');
                 return;
             }
 
-            // Update UI
             const fileNameElement = document.getElementById('fileName');
             const fileSizeElement = document.getElementById('fileSize');
             
@@ -231,7 +167,6 @@ document.addEventListener('DOMContentLoaded', function() {
             submitBtn.disabled = false;
         }
 
-        // Form submission
         uploadForm.addEventListener('submit', function(e) {
             if (fileInput.files.length === 0) {
                 e.preventDefault();
@@ -239,7 +174,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
             
-            // Show progress
             if (uploadProgress) {
                 uploadProgress.style.display = 'block';
             }
@@ -248,7 +182,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Clear file selection
     window.clearFile = function() {
         const fileInput = document.getElementById('fileInput');
         const uploadContent = document.getElementById('uploadContent');
@@ -261,7 +194,6 @@ document.addEventListener('DOMContentLoaded', function() {
         if (submitBtn) submitBtn.disabled = true;
     }
 
-    // Format file size
     function formatFileSize(bytes) {
         if (bytes === 0) return '0 Bytes';
         const k = 1024;
@@ -269,16 +201,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const i = Math.floor(Math.log(bytes) / Math.log(k));
         return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
     }
-
-    // Flash message handling
-    const alerts = document.querySelectorAll('.alert-dismissible');
-    alerts.forEach(function(alert) {
-        setTimeout(function() {
-            if (alert && alert.parentNode) {
-                alert.style.display = 'none';
-            }
-        }, 5000);
-    });
 });
 </script>
 
@@ -287,7 +209,6 @@ document.addEventListener('DOMContentLoaded', function() {
     transition: background-color 0.3s ease;
     cursor: pointer;
 }
-
 .file-upload-area:hover {
     background-color: #f8f9fa !important;
 }
