@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block title %}Combined Analysis Results - Parkinson's AI{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-12">
+            <div class="text-center mb-4">
+                <h1 class="fw-bold text-warning">
+                    <i class="fas fa-layer-group me-3"></i>
+                    Combined Multi-Modal Analysis Results
+                </h1>
+                <p class="lead text-muted">
+                    Voice: <strong>{{ result.voice_filename }}</strong> | 
+                    Drawing: <strong>{{ result.drawing_filename }}</strong>
+                </p>
+            </div>
+
+            <div class="row">
+                <!-- Voice Analysis Results -->
+                <div class="col-lg-6">
+                    <div class="card h-100 mb-4">
+                        <div class="card-header bg-primary text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-microphone me-2"></i>
+                                Voice Analysis
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            {% if result.voice_result.success %}
+                            <div class="text-center mb-3">
+                                {% set voice_risk_color = "danger" if result.voice_result.predicted_class == "Parkinson's Disease" else "success" %}
+                                <div class="alert alert-{{ voice_risk_color }}">
+                                    <h6 class="mb-1">{{ result.voice_result.predicted_class }}</h6>
+                                    <small>Confidence: {{ result.voice_result.confidence }}%</small>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <h6>Probabilities</h6>
+                                <div class="mb-2">
+                                    <small>Parkinson's: {{ result.voice_result.parkinson_probability }}%</small>
+                                    <div class="progress" style="height: 10px;">
+                                        <div class="progress-bar bg-danger" 
+                                             style="width: {{ result.voice_result.parkinson_probability }}%"></div>
+                                    </div>
+                                </div>
+                                <div class="mb-2">
+                                    <small>Healthy: {{ result.voice_result.healthy_probability }}%</small>
+                                    <div class="progress" style="height: 10px;">
+                                        <div class="progress-bar bg-success" 
+                                             style="width: {{ result.voice_result.healthy_probability }}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <h6>Audio Analysis</h6>
+                                <small class="text-muted">
+                                    Duration: {{ "%.1f"|format(result.voice_result.audio_analysis.duration) }}s<br>
+                                    {{ result.voice_result.audio_analysis.analysis_note }}
+                                </small>
+                            </div>
+
+                            <div>
+                                <h6>Risk Level</h6>
+                                <span class="badge bg-{{ voice_risk_color }}">{{ result.voice_result.risk_level }}</span>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-triangle me-2"></i>
+                                Voice analysis failed: {{ result.voice_result.error }}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Drawing Analysis Results -->
+                <div class="col-lg-6">
+                    <div class="card h-100 mb-4">
+                        <div class="card-header bg-success text-white">
+                            <h5 class="mb-0">
+                                <i class="fas fa-draw-polygon me-2"></i>
+                                Drawing Analysis
+                            </h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center mb-3">
+                                {% set drawing_risk_color = "danger" if result.drawing_result.prediction == "Parkinson's Disease" else "success" %}
+                                <div class="alert alert-{{ drawing_risk_color }}">
+                                    <h6 class="mb-1">{{ result.drawing_result.prediction }}</h6>
+                                    <small>Confidence: {{ "%.1f"|format(result.drawing_result.confidence * 100) }}%</small>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <h6>Probabilities</h6>
+                                <div class="mb-2">
+                                    <small>Parkinson's: {{ "%.1f"|format(result.drawing_result.parkinson_probability * 100) }}%</small>
+                                    <div class="progress" style="height: 10px;">
+                                        <div class="progress-bar bg-danger" 
+                                             style="width: {{ "%.1f"|format(result.drawing_result.parkinson_probability * 100) }}%"></div>
+                                    </div>
+                                </div>
+                                <div class="mb-2">
+                                    <small>Healthy: {{ "%.1f"|format(result.drawing_result.healthy_probability * 100) }}%</small>
+                                    <div class="progress" style="height: 10px;">
+                                        <div class="progress-bar bg-success" 
+                                             style="width: {{ "%.1f"|format(result.drawing_result.healthy_probability * 100) }}%"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <h6>Medical Features</h6>
+                                <small class="text-muted">
+                                    Smoothness: {{ "%.2f"|format(result.drawing_result.medical_features.line_smoothness) }}<br>
+                                    Consistency: {{ "%.2f"|format(result.drawing_result.medical_features.size_consistency) }}<br>
+                                    Variation: {{ "%.2f"|format(result.drawing_result.medical_features.thickness_variation) }}<br>
+                                    Angular: {{ "%.2f"|format(result.drawing_result.medical_features.angular_consistency) }}
+                                </small>
+                            </div>
+
+                            <div>
+                                <h6>Risk Level</h6>
+                                <span class="badge bg-{{ drawing_risk_color }}">{{ result.drawing_result.clinical_interpretation.risk_level }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Combined Interpretation -->
+            <div class="card mb-4">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="fas fa-brain me-2"></i>
+                        Combined Analysis Interpretation
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if result.voice_result.success %}
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6>Voice Analysis Summary</h6>
+                            <p class="text-muted">{{ result.voice_result.recommendation }}</p>
+                            
+                            {% if result.voice_result.prediction_type == "ensemble" %}
+                            <h6>Model Agreement</h6>
+                            <div class="progress mb-2" style="height: 15px;">
+                                <div class="progress-bar bg-info" style="width: {{ result.voice_result.model_agreement }}%">
+                                    {{ result.voice_result.model_agreement }}%
+                                </div>
+                            </div>
+                            <small class="text-muted">Prediction Uncertainty: {{ result.voice_result.uncertainty }}%</small>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <h6>Drawing Analysis Summary</h6>
+                            <div class="mb-2">
+                                {% for note in result.drawing_result.clinical_interpretation.clinical_notes %}
+                                <p class="text-muted small mb-1">• {{ note }}</p>
+                                {% endfor %}
+                            </div>
+                            
+                            <h6>Recommendations</h6>
+                            <div>
+                                {% for rec in result.drawing_result.clinical_interpretation.recommendations %}
+                                <p class="text-muted small mb-1">• {{ rec }}</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Overall Assessment -->
+                    <div class="mt-4 p-3 bg-light rounded">
+                        <h6><i class="fas fa-clipboard-check me-2"></i>Overall Assessment</h6>
+                        {% set both_parkinson = (result.voice_result.predicted_class == "Parkinson's Disease" and result.drawing_result.prediction == "Parkinson's Disease") %}
+                        {% set both_healthy = (result.voice_result.predicted_class == "Healthy" and result.drawing_result.prediction == "Healthy") %}
+                        
+                        {% if both_parkinson %}
+                        <div class="alert alert-danger">
+                            <strong>High Concern:</strong> Both voice and drawing analysis indicate potential Parkinson's symptoms. 
+                            Strong recommendation for neurological evaluation.
+                        </div>
+                        {% elif both_healthy %}
+                        <div class="alert alert-success">
+                            <strong>Low Risk:</strong> Both analyses suggest healthy patterns. 
+                            Continue routine health monitoring.
+                        </div>
+                        {% else %}
+                        <div class="alert alert-warning">
+                            <strong>Mixed Results:</strong> Voice and drawing analyses show different patterns. 
+                            Recommend follow-up assessment to clarify findings.
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        Combined analysis incomplete due to voice processing error. 
+                        Drawing analysis results are still valid.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Disclaimer -->
+            <div class="alert alert-warning">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>Medical Disclaimer:</strong> This combined AI analysis is for informational purposes only and should not replace professional medical diagnosis. The multi-modal approach may provide additional insights, but clinical evaluation by a healthcare provider remains essential.
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="text-center">
+                <a href="{{ url_for('upload_combined') }}" class="btn btn-warning btn-lg me-3">
+                    <i class="fas fa-upload me-2"></i>
+                    New Combined Analysis
+                </a>
+                <a href="{{ url_for('index') }}" class="btn btn-outline-warning btn-lg">
+                    <i class="fas fa-home me-2"></i>
+                    Home
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
