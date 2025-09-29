@@ -7,3 +7,55 @@ new_env/
 __pycache__/
 *.ipynb_checkpoints/
 .DS_Store
+# Model files
+*.pth
+*.pkl
+*.joblib
+*.h5
+*.hdf5
+
+# Dataset files
+*.zip
+data/
+dataset/
+
+# Training outputs
+results/
+checkpoints/
+logs/
+wandb/
+
+# Large files
+*.bin
+*.model
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+.venv/
+venv/
+
+# Jupyter notebooks checkpoints
+.ipynb_checkpoints/
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Training artifacts
+*.png
+*.jpg
+*.jpeg
+plots/
+figures/
+*.csv

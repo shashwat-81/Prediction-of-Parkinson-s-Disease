@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+
+{% block title %}Voice Analysis - Parkinson's AI{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="text-center mb-5">
+                <h2 class="fw-bold">
+                    <i class="fas fa-microphone me-3 text-primary"></i>
+                    Upload Your Voice Recording
+                </h2>
+                <p class="lead text-muted">Upload an audio file for Parkinson's disease voice analysis</p>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+
+            <div class="alert alert-info mb-4">
+                <h6><i class="fas fa-info-circle me-2"></i>Voice Recording Guidelines</h6>
+                <ul class="mb-0">
+                    <li><strong>✅ Upload:</strong> Simple voice recordings (saying "ahhhh" for 3+ seconds)</li>
+                    <li><strong>✅ Acceptable:</strong> Speech, sustained vowels, voice exercises</li>
+                    <li><strong>❌ Rejected:</strong> Music, songs, complex audio with instruments</li>
+                    <li><strong>📏 Duration:</strong> At least 1 second, recommended 3+ seconds</li>
+                    <li><strong>🎤 Quality:</strong> Clear recording without background music</li>
+                </ul>
+            </div>
+
+            <div class="card">
+                <div class="card-body p-5">
+                    <form method="post" enctype="multipart/form-data" id="uploadForm">
+                        <div class="file-upload-area text-center p-4 border border-2 border-dashed border-primary rounded" id="fileUploadArea">
+                            <div class="upload-content" id="uploadContent">
+                                <i class="fas fa-cloud-upload-alt text-primary" style="font-size: 3rem;"></i>
+                                <h5 class="mt-3 mb-3">Drag & Drop or Click to Upload</h5>
+                                <p class="text-muted mb-3">Support for WAV, MP3, FLAC, M4A files (max 16MB)</p>
+                                <input type="file" name="file" id="fileInput" accept=".wav,.mp3,.flac,.m4a" style="display: none;" required>
+                                <button type="button" class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+                                    <i class="fas fa-folder-open me-2"></i>Choose File
+                                </button>
+                            </div>
+                            
+                            <div class="selected-file" id="selectedFile" style="display: none;">
+                                <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
+                                    <div class="d-flex align-items-center">
+                                        <i class="fas fa-file-audio text-primary me-3" style="font-size: 1.5rem;"></i>
+                                        <div>
+                                            <h6 class="mb-0" id="fileName"></h6>
+                                            <small class="text-muted" id="fileSize"></small>
+                                        </div>
+                                    </div>
+                                    <button type="button" class="btn btn-sm btn-outline-danger" onclick="clearFile()">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 text-center">
+                            <button type="submit" class="btn btn-success btn-lg" id="submitBtn" disabled>
+                                <i class="fas fa-brain me-2"></i>Analyze Voice
+                            </button>
+                        </div>
+
+                        <div class="mt-4" id="uploadProgress" style="display: none;">
+                            <div class="d-flex align-items-center mb-2">
+                                <div class="spinner-border spinner-border-sm text-primary me-2" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                                <span>Analyzing your voice... This may take a few moments.</span>
+                            </div>
+                            <div class="progress">
+                                <div class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 100%"></div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="text-center mt-4">
+                <a href="{{ url_for('index') }}" class="btn btn-outline-primary me-3">
+                    <i class="fas fa-home me-2"></i>
+                    Back to Home
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const fileUploadArea = document.getElementById('fileUploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const selectedFile = document.getElementById('selectedFile');
+    const uploadContent = document.getElementById('uploadContent');
+    const submitBtn = document.getElementById('submitBtn');
+    const uploadForm = document.getElementById('uploadForm');
+    const uploadProgress = document.getElementById('uploadProgress');
+
+    if (fileUploadArea && fileInput && selectedFile && uploadContent && submitBtn && uploadForm) {
+        
+        fileUploadArea.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            fileUploadArea.style.backgroundColor = '#e9ecef';
+        });
+
+        fileUploadArea.addEventListener('dragleave', function(e) {
+            e.preventDefault();
+            fileUploadArea.style.backgroundColor = '';
+        });
+
+        fileUploadArea.addEventListener('drop', function(e) {
+            e.preventDefault();
+            fileUploadArea.style.backgroundColor = '';
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFileSelect(files[0]);
+            }
+        });
+
+        fileUploadArea.addEventListener('click', function() {
+            if (!fileInput.files.length) {
+                fileInput.click();
+            }
+        });
+
+        fileInput.addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                handleFileSelect(e.target.files[0]);
+            }
+        });
+
+        function handleFileSelect(file) {
+            const fileExtension = file.name.toLowerCase().split('.').pop();
+            const allowedExtensions = ['wav', 'mp3', 'flac', 'm4a'];
+            
+            if (!allowedExtensions.includes(fileExtension)) {
+                alert('Please select a valid audio file (WAV, MP3, FLAC, M4A)');
+                return;
+            }
+
+            if (file.size > 16 * 1024 * 1024) {
+                alert('File size too large. Please select a file smaller than 16MB.');
+                return;
+            }
+
+            const fileNameElement = document.getElementById('fileName');
+            const fileSizeElement = document.getElementById('fileSize');
+            
+            if (fileNameElement) fileNameElement.textContent = file.name;
+            if (fileSizeElement) fileSizeElement.textContent = formatFileSize(file.size);
+            
+            uploadContent.style.display = 'none';
+            selectedFile.style.display = 'block';
+            submitBtn.disabled = false;
+        }
+
+        uploadForm.addEventListener('submit', function(e) {
+            if (fileInput.files.length === 0) {
+                e.preventDefault();
+                alert('Please select a file to upload.');
+                return;
+            }
+            
+            if (uploadProgress) {
+                uploadProgress.style.display = 'block';
+            }
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+        });
+    }
+
+    window.clearFile = function() {
+        const fileInput = document.getElementById('fileInput');
+        const uploadContent = document.getElementById('uploadContent');
+        const selectedFile = document.getElementById('selectedFile');
+        const submitBtn = document.getElementById('submitBtn');
+        
+        if (fileInput) fileInput.value = '';
+        if (uploadContent) uploadContent.style.display = 'block';
+        if (selectedFile) selectedFile.style.display = 'none';
+        if (submitBtn) submitBtn.disabled = true;
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+});
+</script>
+
+<style>
+.file-upload-area {
+    transition: background-color 0.3s ease;
+    cursor: pointer;
+}
+.file-upload-area:hover {
+    background-color: #f8f9fa !important;
+}
+</style>
+{% endblock %}

@@ -1,5 +1,5 @@
 """
-Flask Web Application for Parkinson's Disease Voice Prediction
+Flask Web Application for Parkinson's Disease Voice & Drawing Prediction
 """
 
 import os
@@ -12,9 +12,11 @@ import json
 from datetime import datetime
 import librosa
 import numpy as np
+from PIL import Image
 
-# Import our prediction system
+# Import our prediction systems
 from predict_disease import ParkinsonsPredictor
+from predict_parkinsons import MedicalParkinsonPredictor
 
 app = Flask(__name__, template_folder='templates')
 app.secret_key = 'parkinson_prediction_app_2025'
@@ -22,7 +24,9 @@ CORS(app)
 
 # Configuration
 UPLOAD_FOLDER = 'uploads'
-ALLOWED_EXTENSIONS = {'wav', 'mp3', 'flac', 'm4a'}
+AUDIO_EXTENSIONS = {'wav', 'mp3', 'flac', 'm4a'}
+IMAGE_EXTENSIONS = {'png', 'jpg', 'jpeg', 'bmp', 'tiff'}
+ALLOWED_EXTENSIONS = AUDIO_EXTENSIONS | IMAGE_EXTENSIONS
 MAX_FILE_SIZE = 16 * 1024 * 1024  # 16MB
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -31,13 +35,23 @@ app.config['MAX_CONTENT_LENGTH'] = MAX_FILE_SIZE
 # Ensure upload directory exists
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Global predictor instance
-predictor = None
+# Global predictor instances
+voice_predictor = None
+drawing_predictor = None
 
-def allowed_file(filename):
+def allowed_file(filename, file_type='any'):
     """Check if file extension is allowed"""
-    return '.' in filename and \
-           filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+    if not ('.' in filename):
+        return False
+    
+    ext = filename.rsplit('.', 1)[1].lower()
+    
+    if file_type == 'audio':
+        return ext in AUDIO_EXTENSIONS
+    elif file_type == 'image':
+        return ext in IMAGE_EXTENSIONS
+    else:
+        return ext in ALLOWED_EXTENSIONS
 
 def is_music_or_complex_audio(audio_path, threshold_complexity=0.6, min_duration=1.0):
     """
@@ -155,18 +169,34 @@ def is_music_or_complex_audio(audio_path, threshold_complexity=0.6, min_duration
     except Exception as e:
         return True, f"Error analyzing audio: {str(e)}", {"error": str(e)}
 
-def initialize_predictor():
-    """Initialize the predictor globally"""
-    global predictor
+def initialize_predictors():
+    """Initialize both voice and drawing predictors"""
+    global voice_predictor, drawing_predictor
+    
     try:
-        if predictor is None:
+        if voice_predictor is None:
             # Use absolute path to scripts directory for model files
             scripts_dir = os.path.dirname(os.path.abspath(__file__))
-            predictor = ParkinsonsPredictor(models_dir=scripts_dir)
-        return True
+            voice_predictor = ParkinsonsPredictor(models_dir=scripts_dir)
+            print("✅ Voice predictor initialized")
     except Exception as e:
-        print(f"Error initializing predictor: {e}")
-        return False
+        print(f"❌ Voice predictor initialization failed: {e}")
+    
+    try:
+        if drawing_predictor is None:
+            drawing_predictor = MedicalParkinsonPredictor()
+            model_path = "medical_vit_parkinson_spiral.pth"
+            if os.path.exists(model_path):
+                drawing_predictor.load_model(model_path)
+                print("✅ Drawing predictor initialized")
+            else:
+                print("⚠️ Drawing model not found, drawing prediction disabled")
+                drawing_predictor = None
+    except Exception as e:
+        print(f"❌ Drawing predictor initialization failed: {e}")
+        drawing_predictor = None
+    
+    return voice_predictor is not None or drawing_predictor is not None
 
 def format_prediction_for_web(result):
     """Format prediction result for web display"""
@@ -211,172 +241,40 @@ def format_prediction_for_web(result):
     
     return formatted
 
+# Routes
 @app.route('/')
 def index():
-    """Main page"""
+    """Main page with both voice and drawing options"""
     return render_template('index.html')
 
-@app.route('/upload', methods=['GET', 'POST'])
-def upload_file():
-    """Handle file upload and prediction"""
-    if request.method == 'GET':
-        # Return working HTML directly - bypass template issues
-        return '''<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Parkinson's Voice Analysis - Upload</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        .main-container {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            margin: 20px auto;
-            max-width: 800px;
-            padding: 40px;
-        }
-        .upload-zone {
-            border: 3px dashed #007bff;
-            border-radius: 10px;
-            padding: 40px;
-            text-align: center;
-            background: #f8f9fa;
-            margin: 20px 0;
-            transition: all 0.3s ease;
-        }
-        .upload-zone:hover {
-            border-color: #0056b3;
-            background: #e3f2fd;
-        }
-        .btn-primary {
-            background: #007bff;
-            border: none;
-            border-radius: 8px;
-            padding: 12px 30px;
-            font-size: 16px;
-        }
-        .alert-success {
-            background: #d4edda;
-            border: 1px solid #c3e6cb;
-            color: #155724;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
-        }
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="main-container">
-            <div class="text-center mb-4">
-                <h1 class="fw-bold text-primary">
-                    <i class="fas fa-microphone me-3"></i>
-                    Parkinson's Voice Analysis
-                </h1>
-                <p class="lead text-muted">Upload your voice recording for AI-powered analysis</p>
-            </div>
+@app.route('/upload')
+def upload_redirect():
+    """Redirect old upload URL to voice upload"""
+    return redirect(url_for('upload_voice'))
 
-            <div class="alert-success">
-                <h6><i class="fas fa-info-circle me-2"></i>Voice Recording Guidelines</h6>
-                <ul class="mb-0">
-                    <li><strong>✅ Upload:</strong> Simple voice recordings (saying "ahhhh" for 3+ seconds)</li>
-                    <li><strong>✅ Acceptable:</strong> Speech, sustained vowels, voice exercises</li>
-                    <li><strong>❌ Rejected:</strong> Music, songs, complex audio with instruments</li>
-                    <li><strong>📏 Duration:</strong> At least 1 second, recommended 3+ seconds</li>
-                    <li><strong>🎤 Quality:</strong> Clear recording without background music</li>
-                </ul>
-            </div>
+@app.route('/upload/voice')
+def upload_voice():
+    """Voice upload page"""
+    return render_template('upload_voice.html')
 
-            <div class="upload-zone">
-                <form method="post" enctype="multipart/form-data" id="uploadForm">
-                    <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
-                    <h4>Upload Your Voice Recording</h4>
-                    <p class="text-muted mb-4">Drag and drop a file here or click to browse</p>
-                    
-                    <input type="file" name="file" id="fileInput" accept=".wav,.mp3,.flac,.m4a" required 
-                           class="form-control mb-3" style="max-width: 400px; margin: 0 auto;">
-                    
-                    <button type="submit" class="btn btn-primary btn-lg">
-                        <i class="fas fa-brain me-2"></i>
-                        Analyze Voice
-                    </button>
-                </form>
-            </div>
-
-            <div class="row mt-4">
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <h6 class="card-title">
-                                <i class="fas fa-check-circle text-success me-2"></i>
-                                What We Accept
-                            </h6>
-                            <ul class="list-unstyled">
-                                <li>• Voice recordings</li>
-                                <li>• Sustained vowels ("ahhhh")</li>
-                                <li>• Speech samples</li>
-                                <li>• Clear audio files</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-6">
-                    <div class="card">
-                        <div class="card-body">
-                            <h6 class="card-title">
-                                <i class="fas fa-times-circle text-danger me-2"></i>
-                                What We Reject
-                            </h6>
-                            <ul class="list-unstyled">
-                                <li>• Music files</li>
-                                <li>• Songs with instruments</li>
-                                <li>• Complex audio</li>
-                                <li>• Background music</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="text-center mt-4">
-                <small class="text-muted">
-                    <i class="fas fa-shield-alt me-1"></i>
-                    Your voice data is processed securely and not stored permanently
-                </small>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>'''
+@app.route('/upload/voice', methods=['POST'])
+def process_voice_upload():
+    """Process voice file upload"""
+    if not voice_predictor:
+        flash('Voice analysis is not available. Please check if the model files exist.', 'error')
+        return render_template('upload_voice.html')
     
-    # POST request - handle file upload
-    # Check if predictor is initialized
-    if not initialize_predictor():
-        error_msg = 'Prediction system not available. Please check model files.'
-        return get_upload_page_with_message(error_msg, 'error')
-    
-    # Check if file was uploaded
     if 'file' not in request.files:
-        error_msg = 'No file selected'
-        return get_upload_page_with_message(error_msg, 'error')
+        flash('No file selected', 'error')
+        return render_template('upload_voice.html')
     
     file = request.files['file']
     
     if file.filename == '':
-        error_msg = 'No file selected'
-        return get_upload_page_with_message(error_msg, 'error')
+        flash('No file selected', 'error')
+        return render_template('upload_voice.html')
     
-    if file and allowed_file(file.filename):
+    if file and allowed_file(file.filename, 'audio'):
         try:
             # Save uploaded file
             filename = secure_filename(file.filename)
@@ -391,14 +289,14 @@ def upload_file():
             if is_music:
                 # Clean up uploaded file
                 os.remove(filepath)
-                error_msg = f'❌ Upload rejected: {reason}. Please upload a simple voice recording (like saying "ahhhh" for 3+ seconds).'
-                return get_upload_page_with_message(error_msg, 'error')
+                flash(f'Upload rejected: {reason}. Please upload a simple voice recording.', 'error')
+                return render_template('upload_voice.html')
             
             # Make prediction
-            result = predictor.predict_single_file(filepath)
+            result = voice_predictor.predict_single_file(filepath)
             formatted_result = format_prediction_for_web(result)
             
-            # Add audio analysis info to result
+            # Add audio analysis info
             formatted_result["audio_analysis"] = {
                 "duration": audio_info.get("duration", 0),
                 "complexity_score": audio_info.get("complexity_score", 0),
@@ -409,350 +307,103 @@ def upload_file():
             os.remove(filepath)
             
             if formatted_result["success"]:
-                # Show results on the same page
-                return get_results_page(formatted_result, file.filename)
+                return render_template('voice_result.html', result=formatted_result, filename=file.filename)
             else:
-                error_msg = f'Prediction failed: {formatted_result["error"]}'
-                return get_upload_page_with_message(error_msg, 'error')
+                flash(f'Prediction failed: {formatted_result["error"]}', 'error')
+                return render_template('upload_voice.html')
                 
         except Exception as e:
-            error_msg = f'Error processing file: {str(e)}'
-            return get_upload_page_with_message(error_msg, 'error')
+            flash(f'Error processing file: {str(e)}', 'error')
+            return render_template('upload_voice.html')
     else:
-        error_msg = 'Invalid file type. Please upload WAV, MP3, FLAC, or M4A files.'
-        return get_upload_page_with_message(error_msg, 'error')
+        flash('Invalid file type. Please upload WAV, MP3, FLAC, or M4A files.', 'error')
+        return render_template('upload_voice.html')
 
-def get_results_page(result, filename):
-    """Return results page with prediction results"""
-    # Determine risk level color
-    risk_color = "danger" if result["predicted_class"] == "Parkinson's" else "success"
-    risk_icon = "fas fa-exclamation-triangle" if result["predicted_class"] == "Parkinson's" else "fas fa-check-circle"
+@app.route('/upload/drawing')
+def upload_drawing():
+    """Drawing upload page"""
+    return render_template('upload_drawing.html')
+
+@app.route('/upload/drawing', methods=['POST'])
+def process_drawing_upload():
+    """Process drawing file upload"""
+    if not drawing_predictor:
+        flash('Drawing analysis is not available. Please check if the model file exists.', 'error')
+        return render_template('upload_drawing.html')
     
-    return f'''<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analysis Results - Parkinson's Voice AI</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        body {{
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }}
-        .main-container {{
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            margin: 20px auto;
-            max-width: 900px;
-            padding: 40px;
-        }}
-        .result-card {{
-            border: none;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            margin: 20px 0;
-        }}
-        .progress-custom {{
-            height: 25px;
-            border-radius: 12px;
-        }}
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="main-container">
-            <div class="text-center mb-4">
-                <h1 class="fw-bold text-primary">
-                    <i class="fas fa-chart-line me-3"></i>
-                    Voice Analysis Results
-                </h1>
-                <p class="lead text-muted">Analysis for: <strong>{filename}</strong></p>
-            </div>
-
-            <!-- Main Result -->
-            <div class="card result-card">
-                <div class="card-body text-center p-5">
-                    <div class="alert alert-{risk_color} mb-4">
-                        <i class="{risk_icon} fa-2x mb-3"></i>
-                        <h3 class="mb-2">{result["predicted_class"]}</h3>
-                        <p class="mb-0">Confidence: {result.get("parkinson_probability", 0)}%</p>
-                    </div>
-                    
-                    <div class="row">
-                        <div class="col-md-6">
-                            <h6>Parkinson's Probability</h6>
-                            <div class="progress progress-custom mb-3">
-                                <div class="progress-bar bg-danger" style="width: {result.get('parkinson_probability', 0)}%">
-                                    {result.get('parkinson_probability', 0)}%
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-md-6">
-                            <h6>Healthy Probability</h6>
-                            <div class="progress progress-custom mb-3">
-                                <div class="progress-bar bg-success" style="width: {result.get('healthy_probability', 0)}%">
-                                    {result.get('healthy_probability', 0)}%
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Model Details -->
-            {get_model_details_html(result)}
-
-            <!-- Audio Analysis -->
-            <div class="card result-card">
-                <div class="card-body">
-                    <h5 class="card-title">
-                        <i class="fas fa-waveform-lines me-2"></i>
-                        Audio Analysis
-                    </h5>
-                    <div class="row">
-                        <div class="col-md-4">
-                            <small class="text-muted">Duration</small>
-                            <p class="mb-0">{result["audio_analysis"]["duration"]:.1f} seconds</p>
-                        </div>
-                        <div class="col-md-4">
-                            <small class="text-muted">Complexity Score</small>
-                            <p class="mb-0">{result["audio_analysis"]["complexity_score"]:.2f}</p>
-                        </div>
-                        <div class="col-md-4">
-                            <small class="text-muted">Analysis Note</small>
-                            <p class="mb-0">{result["audio_analysis"]["analysis_note"]}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Disclaimer -->
-            <div class="alert alert-warning">
-                <i class="fas fa-exclamation-triangle me-2"></i>
-                <strong>Medical Disclaimer:</strong> This AI analysis is for informational purposes only and should not replace professional medical diagnosis. Please consult with a healthcare provider for proper medical evaluation.
-            </div>
-
-            <!-- Action Buttons -->
-            <div class="text-center">
-                <a href="/upload" class="btn btn-primary btn-lg me-3">
-                    <i class="fas fa-upload me-2"></i>
-                    Analyze Another Recording
-                </a>
-                <a href="/" class="btn btn-outline-primary btn-lg">
-                    <i class="fas fa-home me-2"></i>
-                    Home
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>'''
-
-def get_model_details_html(result):
-    """Generate HTML for model details section"""
-    if result.get("prediction_type") == "ensemble":
-        models_html = ""
-        for model in result.get("individual_models", []):
-            models_html += f'''
-            <div class="col-md-6 mb-3">
-                <div class="card">
-                    <div class="card-body">
-                        <h6 class="card-title">{model["name"]}</h6>
-                        <p class="mb-1">Prediction: <strong>{model["prediction"]}</strong></p>
-                        <p class="mb-0">Confidence: {model["confidence"]}%</p>
-                    </div>
-                </div>
-            </div>
-            '''
-        
-        return f'''
-        <div class="card result-card">
-            <div class="card-body">
-                <h5 class="card-title">
-                    <i class="fas fa-brain me-2"></i>
-                    Ensemble Model Analysis
-                </h5>
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <small class="text-muted">Model Agreement</small>
-                        <p class="mb-0">{result.get("model_agreement", 0)}%</p>
-                    </div>
-                    <div class="col-md-6">
-                        <small class="text-muted">Prediction Uncertainty</small>
-                        <p class="mb-0">{result.get("uncertainty", 0)}%</p>
-                    </div>
-                </div>
-                <h6>Individual Model Results:</h6>
-                <div class="row">
-                    {models_html}
-                </div>
-            </div>
-        </div>
-        '''
+    if 'file' not in request.files:
+        flash('No file selected', 'error')
+        return render_template('upload_drawing.html')
+    
+    file = request.files['file']
+    
+    if file.filename == '':
+        flash('No file selected', 'error')
+        return render_template('upload_drawing.html')
+    
+    if file and allowed_file(file.filename, 'image'):
+        try:
+            # Save uploaded file
+            filename = secure_filename(file.filename)
+            timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+            filename = f"{timestamp}_{filename}"
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(filepath)
+            
+            # Validate it's actually an image
+            try:
+                img = Image.open(filepath)
+                img.verify()
+            except Exception:
+                os.remove(filepath)
+                flash('Invalid image file. Please upload a valid PNG, JPG, or JPEG image.', 'error')
+                return render_template('upload_drawing.html')
+            
+            # Make prediction
+            result = drawing_predictor.predict_single_image(filepath, return_details=True)
+            
+            # Clean up uploaded file
+            os.remove(filepath)
+            
+            if result:
+                return render_template('drawing_result.html', result=result, filename=file.filename)
+            else:
+                flash('Failed to analyze the drawing. Please try with a different image.', 'error')
+                return render_template('upload_drawing.html')
+                
+        except Exception as e:
+            flash(f'Error processing file: {str(e)}', 'error')
+            return render_template('upload_drawing.html')
     else:
-        return f'''
-        <div class="card result-card">
-            <div class="card-body">
-                <h5 class="card-title">
-                    <i class="fas fa-brain me-2"></i>
-                    Model Analysis
-                </h5>
-                <p>Model Used: <strong>{result.get("model_used", "Unknown")}</strong></p>
-                <p>Confidence: <strong>{result.get("confidence", 0)}%</strong></p>
-            </div>
-        </div>
-        '''
+        flash('Invalid file type. Please upload PNG, JPG, or JPEG images.', 'error')
+        return render_template('upload_drawing.html')
 
-def get_upload_page_with_message(message, msg_type):
-    alert_class = "alert-danger" if msg_type == 'error' else "alert-success"
-    alert_icon = "fas fa-exclamation-triangle" if msg_type == 'error' else "fas fa-check-circle"
-    
-    return f'''<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Parkinson's Voice Analysis - Upload</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
-    <style>
-        body {{
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }}
-        .main-container {{
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
-            margin: 20px auto;
-            max-width: 800px;
-            padding: 40px;
-        }}
-        .upload-zone {{
-            border: 3px dashed #007bff;
-            border-radius: 10px;
-            padding: 40px;
-            text-align: center;
-            background: #f8f9fa;
-            margin: 20px 0;
-            transition: all 0.3s ease;
-        }}
-        .upload-zone:hover {{
-            border-color: #0056b3;
-            background: #e3f2fd;
-        }}
-        .btn-primary {{
-            background: #007bff;
-            border: none;
-            border-radius: 8px;
-            padding: 12px 30px;
-            font-size: 16px;
-        }}
-        .alert-success {{
-            background: #d4edda;
-            border: 1px solid #c3e6cb;
-            color: #155724;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
-        }}
-        .alert-danger {{
-            background: #f8d7da;
-            border: 1px solid #f5c6cb;
-            color: #721c24;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
-        }}
-    </style>
-</head>
-<body>
-    <div class="container">
-        <div class="main-container">
-            <div class="text-center mb-4">
-                <h1 class="fw-bold text-primary">
-                    <i class="fas fa-microphone me-3"></i>
-                    Parkinson's Voice Analysis
-                </h1>
-                <p class="lead text-muted">Upload your voice recording for AI-powered analysis</p>
-            </div>
-
-            <div class="alert {alert_class}">
-                <i class="{alert_icon} me-2"></i>
-                {message}
-            </div>
-
-            <div class="alert-success">
-                <h6><i class="fas fa-info-circle me-2"></i>Voice Recording Guidelines</h6>
-                <ul class="mb-0">
-                    <li><strong>✅ Upload:</strong> Simple voice recordings (saying "ahhhh" for 3+ seconds)</li>
-                    <li><strong>✅ Acceptable:</strong> Speech, sustained vowels, voice exercises</li>
-                    <li><strong>❌ Rejected:</strong> Music, songs, complex audio with instruments</li>
-                    <li><strong>📏 Duration:</strong> At least 1 second, recommended 3+ seconds</li>
-                    <li><strong>🎤 Quality:</strong> Clear recording without background music</li>
-                </ul>
-            </div>
-
-            <div class="upload-zone">
-                <form method="post" enctype="multipart/form-data" id="uploadForm">
-                    <i class="fas fa-cloud-upload-alt fa-3x text-primary mb-3"></i>
-                    <h4>Upload Your Voice Recording</h4>
-                    <p class="text-muted mb-4">Drag and drop a file here or click to browse</p>
-                    
-                    <input type="file" name="file" id="fileInput" accept=".wav,.mp3,.flac,.m4a" required 
-                           class="form-control mb-3" style="max-width: 400px; margin: 0 auto;">
-                    
-                    <button type="submit" class="btn btn-primary btn-lg">
-                        <i class="fas fa-brain me-2"></i>
-                        Analyze Voice
-                    </button>
-                </form>
-            </div>
-
-            <div class="text-center mt-4">
-                <a href="/upload" class="btn btn-outline-primary">
-                    <i class="fas fa-refresh me-2"></i>
-                    Try Again
-                </a>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>'''
+@app.route('/about')
+def about():
+    """About page"""
+    return render_template('about.html')
 
 @app.route('/api/predict', methods=['POST'])
 def api_predict():
     """API endpoint for predictions"""
-    if not initialize_predictor():
-        return jsonify({"success": False, "error": "Prediction system not available"})
+    if not voice_predictor:
+        return jsonify({"success": False, "error": "Voice prediction system not available"})
     
     if 'file' not in request.files:
         return jsonify({"success": False, "error": "No file uploaded"})
     
     file = request.files['file']
     
-    if file.filename == '' or not allowed_file(file.filename):
+    if file.filename == '' or not allowed_file(file.filename, 'audio'):
         return jsonify({"success": False, "error": "Invalid file"})
     
     try:
-        # Save file temporarily
         with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as tmp_file:
             file.save(tmp_file.name)
             
-            # Check if audio is music/complex audio
             is_music, reason, audio_info = is_music_or_complex_audio(tmp_file.name)
             
             if is_music:
-                # Clean up
                 os.unlink(tmp_file.name)
                 return jsonify({
                     "success": False, 
@@ -760,43 +411,30 @@ def api_predict():
                     "audio_analysis": audio_info
                 })
             
-            # Make prediction
-            result = predictor.predict_single_file(tmp_file.name)
+            result = voice_predictor.predict_single_file(tmp_file.name)
             formatted_result = format_prediction_for_web(result)
             
-            # Add audio analysis info
             formatted_result["audio_analysis"] = {
                 "duration": audio_info.get("duration", 0),
                 "complexity_score": audio_info.get("complexity_score", 0),
                 "analysis_note": reason
             }
             
-            # Clean up
             os.unlink(tmp_file.name)
-            
             return jsonify(formatted_result)
             
     except Exception as e:
         return jsonify({"success": False, "error": str(e)})
 
-@app.route('/batch')
-def batch_upload():
-    """Page for batch predictions"""
-    return render_template('batch.html')
-
-@app.route('/about')
-def about():
-    """About page with information"""
-    return render_template('about.html')
-
 @app.route('/health')
 def health_check():
     """Health check endpoint"""
     try:
-        predictor_status = initialize_predictor()
+        predictor_status = initialize_predictors()
         return jsonify({
             "status": "healthy" if predictor_status else "degraded",
-            "predictor_available": predictor_status,
+            "voice_predictor_available": voice_predictor is not None,
+            "drawing_predictor_available": drawing_predictor is not None,
             "timestamp": datetime.now().isoformat()
         })
     except Exception as e:
@@ -807,18 +445,16 @@ def health_check():
         }), 500
 
 if __name__ == '__main__':
-    print("🎤 Starting Parkinson's Disease Prediction Web App")
-    print("=" * 50)
+    print("🎤🖊️ Starting Parkinson's Disease Prediction Web App")
+    print("=" * 60)
     
-    # Initialize predictor on startup
-    if initialize_predictor():
-        print("✅ Prediction system initialized successfully")
+    if initialize_predictors():
+        print("✅ Prediction systems initialized successfully")
     else:
-        print("❌ Warning: Prediction system failed to initialize")
-        print("   Make sure model files are present in the scripts directory")
+        print("❌ Warning: Some prediction systems failed to initialize")
     
     print("🌐 Web app will be available at: http://localhost:5000")
     print("📁 Upload folder:", os.path.abspath(UPLOAD_FOLDER))
-    print("=" * 50)
+    print("=" * 60)
     
     app.run(debug=True, host='0.0.0.0', port=5000)

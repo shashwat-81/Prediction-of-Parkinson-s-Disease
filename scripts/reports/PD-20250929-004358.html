@@ -1,0 +1,255 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <title>Medical Analysis Report - PD-20250929-004358</title>
+        <style>
+            body {
+                font-family: 'Segoe UI', Arial, sans-serif;
+                line-height: 1.6;
+                color: #333;
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 20px;
+                background: #f8f9fa;
+            }
+            .report-container {
+                background: white;
+                border-radius: 8px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+                overflow: hidden;
+            }
+            .report-header {
+                background: linear-gradient(135deg, #2c5aa0 0%, #1a365d 100%);
+                color: white;
+                padding: 30px;
+                text-align: center;
+            }
+            .report-header h1 {
+                margin: 0;
+                font-size: 24px;
+                font-weight: 300;
+            }
+            .report-id {
+                background: rgba(255,255,255,0.2);
+                padding: 8px 16px;
+                border-radius: 20px;
+                display: inline-block;
+                margin-top: 10px;
+                font-family: monospace;
+            }
+            .report-body {
+                padding: 30px;
+            }
+            .section {
+                margin-bottom: 25px;
+                padding-bottom: 20px;
+                border-bottom: 1px solid #eee;
+            }
+            .section:last-child {
+                border-bottom: none;
+            }
+            .section-title {
+                color: #2c5aa0;
+                font-size: 18px;
+                font-weight: 600;
+                margin-bottom: 15px;
+                display: flex;
+                align-items: center;
+            }
+            .section-title i {
+                margin-right: 10px;
+            }
+            .result-summary {
+                background: #f0fff4;
+                border: 2px solid #c6f6d5;
+                border-radius: 8px;
+                padding: 20px;
+                margin: 15px 0;
+            }
+            .result-title {
+                color: #38a169;
+                font-size: 20px;
+                font-weight: bold;
+                margin-bottom: 10px;
+            }
+            .probability-bars {
+                margin: 15px 0;
+            }
+            .probability-bar {
+                background: #f1f1f1;
+                border-radius: 10px;
+                margin: 8px 0;
+                overflow: hidden;
+            }
+            .probability-fill {
+                height: 25px;
+                border-radius: 10px;
+                display: flex;
+                align-items: center;
+                padding: 0 10px;
+                color: white;
+                font-weight: bold;
+                font-size: 12px;
+            }
+            .prob-parkinson {
+                background: linear-gradient(90deg, #e53e3e, #c53030);
+            }
+            .prob-healthy {
+                background: linear-gradient(90deg, #38a169, #2f855a);
+            }
+            .technical-details {
+                background: #f7fafc;
+                border-radius: 6px;
+                padding: 15px;
+                margin: 10px 0;
+            }
+            .technical-row {
+                display: flex;
+                justify-content: space-between;
+                padding: 5px 0;
+                border-bottom: 1px solid #e2e8f0;
+            }
+            .technical-row:last-child {
+                border-bottom: none;
+            }
+            .clinical-notes {
+                background: #fffaf0;
+                border-left: 4px solid #ed8936;
+                padding: 15px;
+                margin: 15px 0;
+            }
+            .clinical-notes ul {
+                margin: 10px 0;
+                padding-left: 20px;
+            }
+            .disclaimer {
+                background: #fed7d7;
+                border: 1px solid #feb2b2;
+                border-radius: 6px;
+                padding: 15px;
+                margin-top: 20px;
+                font-size: 14px;
+            }
+            .footer {
+                text-align: center;
+                padding: 20px;
+                color: #666;
+                border-top: 1px solid #eee;
+                margin-top: 30px;
+            }
+            @media print {
+                body { background: white; }
+                .report-container { box-shadow: none; }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="report-container">
+            <div class="report-header">
+                <h1>Parkinson's Disease AI Analysis Report</h1>
+                <div class="report-id">Report ID: PD-20250929-004358</div>
+                <p style="margin: 10px 0 0 0; opacity: 0.9;">
+                    Generated on September 29, 2025 at 12:43 AM
+                </p>
+            </div>
+            
+            <div class="report-body">
+                <div class="section">
+                    <div class="section-title">
+                        📋 Analysis Summary
+                    </div>
+                    <div class="technical-details">
+                        <div class="technical-row">
+                            <span><strong>Analysis Type:</strong></span>
+                            <span>Voice Analysis</span>
+                        </div>
+                        <div class="technical-row">
+                            <span><strong>Sample File:</strong></span>
+                            <span>shashwat.wav</span>
+                        </div>
+                        <div class="technical-row">
+                            <span><strong>Processing Method:</strong></span>
+                            <span>Ensemble Model Prediction</span>
+                        </div>
+                        <div class="technical-row">
+                            <span><strong>Analysis Date:</strong></span>
+                            <span>2025-09-29 00:43:58</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">
+                        🎯 Prediction Results
+                    </div>
+                    <div class="result-summary">
+                        <div class="result-title">HC_AH</div>
+                        <p><strong>Risk Level:</strong> Low Risk</p>
+                        <p><strong>Confidence:</strong> 83.3%</p>
+                        
+                        <div class="probability-bars">
+                            <div class="probability-bar">
+                                <div class="probability-fill prob-parkinson" style="width: 18.3%">
+                                    Parkinson's Disease: 18.3%
+                                </div>
+                            </div>
+                            <div class="probability-bar">
+                                <div class="probability-fill prob-healthy" style="width: 81.7%">
+                                    Healthy: 81.7%
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">
+                        🏥 Clinical Interpretation
+                    </div>
+                    <div class="clinical-notes">
+                        <h4>Clinical Observations:</h4>
+                        <ul>
+                            <li>Voice analysis shows patterns within normal limits</li><li>No significant vocal markers of Parkinson's Disease detected</li><li>Continue regular health monitoring as appropriate for age</li>
+                        </ul>
+                    </div>
+                    <p><strong>Recommendation:</strong> Low concern. Continue regular monitoring.</p>
+                </div>
+
+                <div class="section">
+                    <div class="section-title">
+                        ⚙️ Technical Details
+                    </div>
+                    <div class="technical-details">
+                        <div class="technical-row">
+                            <span>Model Type:</span>
+                            <span>Ensemble AI Model</span>
+                        </div>
+                        <div class='technical-row'><span>Model Agreement:</span><span>83.3%</span></div>
+                        <div class='technical-row'><span>Prediction Uncertainty:</span><span>19.8%</span></div>
+                        <div class="technical-row">
+                            <span>Analysis Algorithm:</span>
+                            <span>Wav2Vec2 + Ensemble ML</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="disclaimer">
+                    <strong>⚠️ Important Medical Disclaimer:</strong><br>
+                    This AI analysis is for screening and research purposes only and should not be used as a substitute 
+                    for professional medical diagnosis, treatment, or advice. The results are based on computational 
+                    analysis and should always be interpreted by qualified healthcare professionals. Please consult 
+                    with a neurologist or movement disorder specialist for proper medical evaluation and diagnosis 
+                    of Parkinson's Disease.
+                </div>
+
+                <div class="footer">
+                    <p>Generated by Parkinson's AI Analysis System</p>
+                    <p>Report ID: PD-20250929-004358 | 2025-09-29 00:43:58</p>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    
