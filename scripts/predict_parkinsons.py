@@ -196,9 +196,57 @@ class MedicalParkinsonPredictor:
         """Load trained medical model"""
         try:
             print(f"📂 Loading model from: {model_path}")
-            
-            # Load checkpoint
-            checkpoint = torch.load(model_path, map_location=self.device)
+
+            # Attempt to load checkpoint. Newer PyTorch versions (>=2.6)
+            # default to weights-only loading which blocks some globals.
+            # We'll attempt a safe progressive strategy:
+            # 1) Try a normal torch.load (uses default behavior).
+            # 2) If it fails with a WeightsUnpickler/global error, try to
+            #    allowlist the known numpy scalar global if available.
+            # 3) As a last resort (if user trusts the file), re-load with
+            #    weights_only=False which allows arbitrary pickles.
+            try:
+                checkpoint = torch.load(model_path, map_location=self.device)
+            except Exception as load_err:
+                err_msg = str(load_err)
+                print(f"⚠️ Initial torch.load failed: {err_msg}")
+
+                # Try to allowlist numpy._core.multiarray.scalar if available
+                tried_allowlist = False
+                try:
+                    if hasattr(torch, 'serialization') and hasattr(torch.serialization, 'add_safe_globals'):
+                        import numpy as _np
+                        # Some numpy builds expose the scalar in a few locations
+                        scalar_obj = None
+                        try:
+                            scalar_obj = _np._core.multiarray.scalar
+                        except Exception:
+                            # Fallback: try to get from numpy.core.multiarray
+                            try:
+                                scalar_obj = _np.core.multiarray.scalar
+                            except Exception:
+                                scalar_obj = None
+
+                        if scalar_obj is not None:
+                            print("🔐 Adding numpy scalar to torch safe globals and retrying load...")
+                            torch.serialization.add_safe_globals([scalar_obj])
+                            tried_allowlist = True
+                            checkpoint = torch.load(model_path, map_location=self.device)
+                        else:
+                            print("⚠️ Could not locate numpy scalar object to allowlist")
+                except Exception as allow_err:
+                    print(f"⚠️ Allowlist attempt failed: {allow_err}")
+
+                # If we didn't get a checkpoint yet, try the less-safe weights_only=False
+                if 'checkpoint' not in locals():
+                    try:
+                        print("⚠️ Falling back to torch.load(..., weights_only=False)."
+                              " This may execute arbitrary code from the checkpoint."
+                              " Only do this if you trust the model file source.")
+                        checkpoint = torch.load(model_path, map_location=self.device, weights_only=False)
+                    except Exception as final_err:
+                        print(f"❌ Final load attempt failed: {final_err}")
+                        raise final_err
             self.model_info = {
                 'dataset_type': checkpoint.get('dataset_type', 'spiral'),
                 'medical_features': checkpoint.get('medical_features', 

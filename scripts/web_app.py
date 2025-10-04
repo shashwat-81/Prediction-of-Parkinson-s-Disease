@@ -184,14 +184,24 @@ def initialize_predictors():
     
     try:
         if drawing_predictor is None:
+            # Resolve model path relative to the scripts directory so the web app
+            # finds the model when run from the project root or a different CWD.
+            scripts_dir = os.path.dirname(os.path.abspath(__file__))
             drawing_predictor = MedicalParkinsonPredictor()
-            model_path = "medical_vit_parkinson_spiral.pth"
+            model_filename = "medical_vit_parkinson_spiral.pth"
+            model_path = os.path.join(scripts_dir, model_filename)
             if os.path.exists(model_path):
                 drawing_predictor.load_model(model_path)
                 print("✅ Drawing predictor initialized")
             else:
-                print("⚠️ Drawing model not found, drawing prediction disabled")
-                drawing_predictor = None
+                # Also try current working directory as a fallback
+                alt_path = os.path.join(os.getcwd(), model_filename)
+                if os.path.exists(alt_path):
+                    drawing_predictor.load_model(alt_path)
+                    print("✅ Drawing predictor initialized from CWD")
+                else:
+                    print("⚠️ Drawing model not found, drawing prediction disabled")
+                    drawing_predictor = None
     except Exception as e:
         print(f"❌ Drawing predictor initialization failed: {e}")
         drawing_predictor = None
